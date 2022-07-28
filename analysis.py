@@ -127,7 +127,7 @@ if __name__ == "__main__":
     }
 
     # Calculate eigenvalues
-    # analysis(dir_result, dir_analysis, stock_num, params)
+    analysis(dir_result, dir_analysis, stock_num, params)
 
     # Analysis
     df_eigvals = pd.read_csv(dir_analysis + "df_eigvals.csv", index_col=0)
