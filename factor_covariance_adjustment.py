@@ -74,7 +74,7 @@ class FactorCovAdjuster:
             D_m[D_m <= 0] = 1e-14  # fix numerical error
             D_m_tilde = U_m.T.dot(self.FCM).dot(U_m)
             Lambda += np.diag(D_m_tilde) / D_m
-        Lambda[Lambda <= 0] = 1e-14
+        Lambda[Lambda <= 0] = 1e-14  # fix numerical error
         Lambda = np.sqrt(Lambda / M)
         Gamma = coef * (Lambda - 1.0) + 1.0
         D_0_tilde = Gamma**2 * D_0
