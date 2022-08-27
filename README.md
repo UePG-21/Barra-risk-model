@@ -2,7 +2,7 @@
 
 ## utils.py
 1. `ewa()`: exponential weighted average
-2. `cov_ewa()`: covariance matrix with each squared range has an exponential weight
+2. `cov_ewa()`: covariance matrix with each squared range having an exponential weight
 3. `num_eigvals_explain()`: the number of eigenvalues it takes to explain a percentage of total variance
 4. `draw_eigvals_edf()`: to draw the empirical distribution function (EDF) of eigenvalues of a covariance matrix
    
