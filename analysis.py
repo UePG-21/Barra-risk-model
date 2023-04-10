@@ -102,7 +102,7 @@ def analysis(dir_input: str, dir_output: str, stock_num: int, params: dict[str:d
 
 
 if __name__ == "__main__":
-    dir_main = os.path.abspath("..")
+    dir_main = r"E:\Others\Programming\Python\python_work\CaishengTech" + "/"
     dir_data = dir_main + "data/"
     dir_result = dir_main + "result/"
     dir_analysis = dir_main + "analysis/"
@@ -127,10 +127,12 @@ if __name__ == "__main__":
     }
 
     # Calculate eigenvalues
-    analysis(dir_result, dir_analysis, stock_num, params)
+    # analysis(dir_result, dir_analysis, stock_num, params)
 
     # Analysis
     df_eigvals = pd.read_csv(dir_analysis + "df_eigvals.csv", index_col=0)
+    # df_eigvals = df_eigvals.div(df_eigvals.sum(axis=1), axis=0) * 100
+
     df_return_day = pd.read_csv(dir_analysis + "df_return_day.csv", index_col=0)
     idx = list(set(df_eigvals.index) & set(df_return_day.index))
     df_eigvals = df_eigvals.loc[idx]
@@ -138,14 +140,14 @@ if __name__ == "__main__":
 
     length = 1000
     eig_order = 0
-    pct = 0.4
+    pct = 0.85
     new_periods = 4
 
-    for periods in range(1, 31):
+    for periods in range(1, 6):
         new_periods = periods
 
-        rets = df_return_day.mean(axis=1).values[1:][:length]
-        vols = df_eigvals[f"{eig_order}"].values[:-1][:length]
+        rets = df_return_day.mean(axis=1).values[new_periods:][:length]
+        vols = df_eigvals[f"{eig_order}"].values[:-new_periods][:length]
         nums = []
         for i in df_eigvals.index:
             nums.append(num_eigvals_explain(pct, df_eigvals.loc[i].values))
@@ -167,13 +169,13 @@ if __name__ == "__main__":
         nums = np.array(nums_new) / new_periods
 
         corr_ret_vol = scipy.stats.pearsonr(rets, vols)[0]
-        corr_ret_num = scipy.stats.pearsonr(rets, nums)[0]
-        print("corr_ret_vol", f"({str(new_periods)}) ".ljust(5), round(corr_ret_vol, 3))
+        corr_ret_num = scipy.stats.pearsonr(abs(rets), nums)[0]
+        # print("corr_ret_vol", f"({str(new_periods)}) ".ljust(5), round(corr_ret_vol, 3))
         print("corr_ret_num", f"({str(new_periods)}) ".ljust(5), round(corr_ret_num, 3))
 
     # Draw
     ax1 = plt.gca()
-    ax1.plot(rets, color="r", label="rets")
+    ax1.plot(abs(rets), color="r", label="rets")
     ax2 = ax1.twinx()
     ax2.plot(nums, color="b", label="vols")
-    # plt.show()
+    plt.show()

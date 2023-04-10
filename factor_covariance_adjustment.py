@@ -7,25 +7,31 @@ class FactorCovAdjuster:
     """Adjustments on factor covariance matrix"""
 
     def __init__(self, FRM: np.ndarray) -> None:
-        """
-        Args:
-            FRM (np.ndarray): factor return matrix (K*T)
+        """Initialization
+
+        Parameters
+        ----------
+        FRM : np.ndarray
+            Factor return matrix (K*T)
         """
         self.K, self.T = FRM.shape
         if self.K > self.T:
-            raise ValueError("number of periods must be larger than number of factors")
+            raise Exception("number of periods must be larger than number of factors")
         self.FRM = FRM.astype("float64")
         self.FCM = None
 
     def calc_fcm_raw(self, half_life: int) -> np.ndarray:
         """Calculate the factor covariance matrix, FCM (K*K)
 
-        Args:
-            half_life (int): time it takes for weight in EWA to reduce to half of
-                original value
+        Parameters
+        ----------
+        half_life : int
+            Steps it takes for weight in EWA to reduce to half of the original value
 
-        Returns:
-            np.ndarray: FCM, denoted by `F_Raw`
+        Returns
+        -------
+        np.ndarray
+            FCM, denoted by `F_Raw`
         """
         self.FCM = cov_ewa(self.FRM, half_life).astype("float64")
         return self.FCM
@@ -35,14 +41,19 @@ class FactorCovAdjuster:
     ) -> np.ndarray:
         """Apply Newey-West adjustment on `F_Raw`
 
-        Args:
-            half_life (int): time it takes for weight in EWA to reduce to half of
-                original value
-            max_lags (int): maximum Newey-West correlation lags
-            multiplier (int): number of periods a FCM with new frequence contains
+        Parameters
+        ----------
+        half_life : int
+            Steps it takes for weight in EWA to reduce to half of the original value
+        max_lags : int
+            Maximum Newey-West correlation lags
+        multiplier : int
+            Number of periods a FCM with new frequence contains
 
-        Returns:
-            np.ndarray: Newey-West adjusted FCM, denoted by `F_NW`
+        Returns
+        -------
+        np.ndarray
+            Newey-West adjusted FCM, denoted by `F_NW`
         """
         for i in range(1, max_lags + 1):
             C_pos_delta = cov_ewa(self.FRM, half_life, i)
@@ -56,12 +67,17 @@ class FactorCovAdjuster:
     def eigenfactor_risk_adjust(self, coef: float, M: int = 1000) -> np.ndarray:
         """Apply eigenfactor risk adjustment on `F_NW`
 
-        Args:
-            coef (float): adjustment coefficient
-            M (int, optional): times of Monte Carlo simulation. Defaults to 10000.
+        Parameters
+        ----------
+        coef : float
+            Adjustment coefficient
+        M : int, optional
+            Times of Monte Carlo simulation, by default 1000
 
-        Returns:
-            np.ndarray: eigenfactor risk adjusted FCM, denoted by `F_Eigen`
+        Returns
+        -------
+        np.ndarray
+            Eigenfactor risk adjusted FCM, denoted by `F_Eigen`
         """
         D_0, U_0 = np.linalg.eigh(self.FCM)
         D_0[D_0 <= 0] = 1e-14  # fix numerical error
@@ -82,21 +98,25 @@ class FactorCovAdjuster:
         return self.FCM
 
     def volatility_regime_adjust(
-        self, prev_FCM: np.ndarray, half_life: int
+        self, prev_fcm: np.ndarray, half_life: int
     ) -> np.ndarray:
         """Apply volatility regime adjustment on `F_Eigen`
 
-        Args:
-            prev_FCM (np.ndarray): previously estimated factor covariance matrix
-                (last `F_Eigen`, since `F_VRA` could lead to huge fluctuations) on only
-                one period (not aggregate); the order of factors should remain the same
-            half_life (int): time it takes for weight in EWA to reduce to half of
-                original value
+        Parameters
+        ----------
+        prev_fcm : np.ndarray
+            Previously estimated factor covariance matrix (last `F_Eigen`, since `F_VRA`
+            could lead to huge fluctuations) on only one period (not aggregated); the
+            order of factors should remain the same
+        half_life : int
+            Steps it takes for weight in EWA to reduce to half of the original value
 
-        Returns:
-            np.ndarray:volatility regime dajusted FCM, denoted by `F_VRA`
+        Returns
+        -------
+        np.ndarray
+            Volatility regime adjusted FCM, denoted by `F_VRA`
         """
-        sigma = np.sqrt(np.diag(prev_FCM))
+        sigma = np.sqrt(np.diag(prev_fcm))
         B = BiasStatsCalculator(self.FRM, sigma).single_window(half_life)
         self.FCM = self.FCM * (B**2).mean(axis=0)  # Lambda^2
         return self.FCM

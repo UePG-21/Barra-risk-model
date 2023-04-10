@@ -8,13 +8,18 @@ from sklearn.neighbors import KernelDensity
 def ewa(arr: Sequence, half_life: int | None = None) -> float | np.ndarray:
     """Exponential Weighted Average (EWA)
 
-    Args:
-        arr (Sequence): array of numbers or arrays (later one on axis=0 weights more)
-        half_life (int | None, optional): time it takes for weight to reduce to half of
-            the original value. Defaults to None, meaning that weights are all equal.
+    Parameters
+    ----------
+    arr : Sequence
+        Array of numbers or arrays (later one on axis=0 weights more)
+    half_life : int | None, optional
+        Steps it takes for weight to reduce to half of the original value, by default
+        None, meaning that weights are all equal
 
-    Returns:
-        float: exponential weighted average of elements in `arr`
+    Returns
+    -------
+    float | np.ndarray
+        Exponential weighted average of elements in `arr`
     """
     arr = np.array(arr)
     alpha = 1.0 if half_life is None else 0.5 ** (1 / half_life)
@@ -28,21 +33,27 @@ def ewa(arr: Sequence, half_life: int | None = None) -> float | np.ndarray:
 def cov_ewa(data: np.ndarray, half_life: int | None = None, lag: int = 0) -> np.ndarray:
     """Calculate the covariance matrix as an exponential weighted average of range
 
-    Args:
-        data (np.ndarray): data matrix (K features * T periods)
-        half_life (int | None, optional): argument of ewa()
-        lag (int): difference between to terms of fator, cov(t-lag, t), when lag is
-            opposite, the result is transposed. Defaults to 0.
+    Parameters
+    ----------
+    data : np.ndarray
+        Data matrix (K features * T periods)
+    half_life : int | None, optional
+        Argument in ewa(), by default None
+    lag : int, optional
+        Difference between to terms of fator, cov(t-lag, t), when lag is opposite, the
+        result is transposed, by default 0
 
-    Returns:
-        np.ndarray: covariance matrix
+    Returns
+    -------
+    np.ndarray
+        Covariance matrix
     """
     if not isinstance(data, np.ndarray):
-        raise TypeError("data matrix should be an ndarray")
+        raise Exception("data matrix should be an ndarray")
     if data.shape[0] > data.shape[1]:
-        raise ValueError("data matrix should not have less columns than rows")
+        raise Exception("data matrix should not have less columns than rows")
     if lag >= data.shape[1]:
-        raise ValueError("lag must be smaller than the number of columns of matrix")
+        raise Exception("lag must be smaller than the number of columns of matrix")
     data = data.astype("float64")
     f_bar = data.mean(axis=1)
     data = data - f_bar.reshape(data.shape[0], -1)
@@ -54,12 +65,17 @@ def cov_ewa(data: np.ndarray, half_life: int | None = None, lag: int = 0) -> np.
 def num_eigvals_explain(pct: float, eigvals: np.ndarray) -> int:
     """The number of eigenvalues it takes to explain a percentage of total variance
 
-    Args:
-        pct (float): percentage of total variance
-        eigvals (np.ndarray): eigenvalues
+    Parameters
+    ----------
+    pct : float
+        Percentage of total variance
+    eigvals : np.ndarray
+        Eigenvalues
 
-    Returns:
-        int: number of eigenvalues
+    Returns
+    -------
+    int
+        Number of eigenvalues
     """
     eigvals = np.sort(eigvals)[::-1]  # descending order
     eigvals = eigvals / np.sum(eigvals)
@@ -80,11 +96,16 @@ def draw_eigvals_edf(
 ) -> None:
     """Draw the empirical distribution function of `cov`
 
-    Args:
-        cov (np.ndarray): covariance matrix
-        bandwidth (float | None, optional): bandwidth of KDE. Defaults to None.
-        x_range (np.ndarray | None, optional): range of x displayed. Defaults to None.
-        label (str | None, optional): label on plot. Defaults to None.
+    Parameters
+    ----------
+    cov : np.ndarray
+        Covariance matrix
+    bandwidth : float | None, optional
+        Bandwidth of kernel density estimation (KDE), by default None
+    x_range : np.ndarray | None, optional
+        Range of x displayed, by default None
+    label : str | None, optional
+        Label on plot, by default None
     """
     eigvals = np.linalg.eigvalsh(cov).reshape(-1, 1)
     bw = np.cbrt(np.median(eigvals)) if bandwidth is None else bandwidth
